@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -1075,27 +1076,34 @@ async function hydrateFromRemoteIfAvailable() {
       return Number(els.filterYear.value || currentYear());
     }
 
-    function getFilteredRows() {
-      const year = getSelectedYear();
-      const month = Number(els.filterMonth.value || 0);
-      const keyword = els.keyword.value.trim().toLowerCase();
-      const type = els.typeFilter.value;
-      const category = els.categoryQuick.value;
+function getFilteredRows() {
+  const year = getSelectedYear();
+  const month = Number(els.filterMonth.value || 0);
+  const keyword = els.keyword.value.trim().toLowerCase();
+  const type = els.typeFilter.value;
+  const category = els.categoryQuick.value;
 
-      return rows.filter(row => {
-        const parts = dateParts(row.date);
-        if (!parts) return false;
-        if (parts.year !== year) return false;
-        if (month && parts.month !== month) return false;
-        if (type !== 'all' && row.type !== type) return false;
-        if (category && row.category !== category) return false;
-        if (keyword) {
-          const target = [row.date, row.category, row.vendor, row.desc, row.tradeKind].join(' ').toLowerCase();
-          if (!target.includes(keyword)) return false;
-        }
-        return true;
-      });
-    }
+  return rows
+    .filter(row => {
+      const parts = dateParts(row.date);
+      if (!parts) return false;
+      if (parts.year !== year) return false;
+      if (month && parts.month !== month) return false;
+      if (type !== 'all' && row.type !== type) return false;
+      if (category && row.category !== category) return false;
+      if (keyword) {
+        const target = [row.date, row.category, row.vendor, row.desc, row.tradeKind].join(' ').toLowerCase();
+        if (!target.includes(keyword)) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const da = new Date(a.date).getTime();
+      const db = new Date(b.date).getTime();
+      if (da !== db) return da - db; // 날짜 빠른순
+      return (a.id || '').localeCompare(b.id || ''); // 같은 날짜면 안정적으로 정렬
+    });
+}
 
 function syncTypeAmounts(row) {
   if (row.type === 'income') {
