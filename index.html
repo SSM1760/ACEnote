@@ -993,23 +993,22 @@ function save() {
 }
 
     function load() {
-      try {
-        const rawCurrent = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        const rawLegacy = JSON.parse(localStorage.getItem('simple_ledger_excel_style_v3') || '[]');
-        const source = Array.isArray(rawCurrent) && rawCurrent.length ? rawCurrent : rawLegacy;
+  try {
+    const rawCurrent = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const rawLegacy = JSON.parse(localStorage.getItem('simple_ledger_excel_style_v3') || '[]');
+    const source = Array.isArray(rawCurrent) && rawCurrent.length ? rawCurrent : rawLegacy;
 
-        if (!Array.isArray(source) || source.length === 0) {
-  rows = [createRow()];
-} else {
-  rows = migrateLegacyRows(source);
-}
-      } catch {
-        rows = [createRow()];
-      }
-
-      if (!rows.length) rows = [createRow()];
-      selectedId = rows[0]?.id || null;
+    if (!Array.isArray(source) || source.length === 0) {
+      rows = [];
+    } else {
+      rows = migrateLegacyRows(source);
     }
+  } catch {
+    rows = [];
+  }
+
+  selectedId = rows[0]?.id || null;
+}
 
 async function hydrateFromRemoteIfAvailable() {
   const remoteRows = await loadRemote();
@@ -1021,7 +1020,6 @@ async function hydrateFromRemoteIfAvailable() {
   }
 
   rows = normalized;
-  if (!rows.length) rows = [createRow()];
   selectedId = rows[0]?.id || null;
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
@@ -1182,21 +1180,21 @@ async function hydrateFromRemoteIfAvailable() {
       const second = computeTotalsForMonths(year, 7, 12);
 
       els.halfyearBody.innerHTML = `
-        <tr>
-          <td><strong>상반기 (1월~6월)</strong></td>
-          <td class="money income">${formatMoney(first.income)}</td>
-          <td class="money expense">${formatMoney(first.expense)}</td>
-          <td class="money labor">${formatMoney(first.labor)}</td>
-          <td class="money balance">${formatMoney(first.balance)}</td>
-        </tr>
-        <tr>
-          <td><strong>하반기 (7월~12월)</strong></td>
-          <td class="money income">${formatMoney(second.income)}</td>
-          <td class="money expense">${formatMoney(second.expense)}</td>
-          <td class="money labor">${formatMoney(second.labor)}</td>
-          <td class="money balance">${formatMoney(second.balance)}</td>
-        </tr>
-      `;
+  <tr>
+    <td><strong>상반기 (1월~6월)</strong></td>
+    <td class="money income">${formatMoney(first.income)}</td>
+    <td class="money expense">${formatMoney(first.expense)}</td>
+    <td class="money balance">${formatMoney(first.balance)}</td>
+    <td class="money labor">${formatMoney(first.labor)}</td>
+  </tr>
+  <tr>
+    <td><strong>하반기 (7월~12월)</strong></td>
+    <td class="money income">${formatMoney(second.income)}</td>
+    <td class="money expense">${formatMoney(second.expense)}</td>
+    <td class="money balance">${formatMoney(second.balance)}</td>
+    <td class="money labor">${formatMoney(second.labor)}</td>
+  </tr>
+`;
     }
 
     function bindTableEvents() {
