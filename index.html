@@ -1,0 +1,1389 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>간편장부 프로그램</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --line: #d8e0ea;
+      --line-dark: #b8c5d6;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --primary-soft: #eaf2ff;
+      --green: #0f9f6e;
+      --green-soft: #e9fbf4;
+      --red: #dc2626;
+      --red-soft: #fff0f0;
+      --purple: #7c3aed;
+      --purple-soft: #f3edff;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+      --font: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 180px, var(--bg) 100%);
+      color: var(--text);
+      font-family: var(--font);
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 45%, #3b82f6 100%);
+      color: white;
+      border-radius: 26px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: 1.8fr 0.8fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .hero p {
+      margin: 0;
+      line-height: 1.55;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .hero-meta {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .hero-card {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 18px;
+      padding: 16px;
+      backdrop-filter: blur(8px);
+    }
+
+    .hero-card .label {
+      font-size: 12px;
+      opacity: 0.85;
+      margin-bottom: 8px;
+    }
+
+    .hero-card .value {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 20px;
+      margin-top: 20px;
+      align-items: start;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(184,197,214,0.7);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 18px;
+      padding: 18px;
+      min-width: 0;
+    }
+
+    .section + .section {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid #edf2f7;
+    }
+
+    .section h2 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .grid1 { display: grid; gap: 10px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    input, select, button {
+      font: inherit;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="month"],
+    input[type="number"],
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 12px;
+      padding: 10px 12px;
+      outline: none;
+      transition: 0.18s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: #79a8ff;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    .btn-row {
+      display: grid;
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+    }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-soft { background: #eff4fb; color: #20415e; }
+    .btn-outline {
+      background: white;
+      color: #24415f;
+      border: 1px solid var(--line);
+    }
+
+    .mini-note {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      padding: 18px;
+    }
+
+    .summary-card {
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid #edf2f7;
+      background: #fbfdff;
+    }
+
+    .summary-card .title {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .summary-card .num {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .summary-card.income { background: var(--green-soft); }
+    .summary-card.expense { background: var(--red-soft); }
+    .summary-card.balance { background: var(--primary-soft); }
+    .summary-card.labor { background: var(--purple-soft); }
+
+    .workspace {
+      display: grid;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      background: #eef4ff;
+      color: #234a98;
+      border: 1px solid #d6e4ff;
+    }
+
+    .sheet-wrap {
+      padding: 0 18px 18px;
+    }
+
+    .sheet-frame {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: white;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    table {
+      width: 100%;
+      min-width: 0;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: linear-gradient(180deg, #f8fbff 0%, #edf4ff 100%);
+      color: #24415f;
+      font-weight: 800;
+      border-bottom: 1px solid var(--line-dark);
+      border-right: 1px solid var(--line);
+      text-align: center;
+      padding: 12px 8px;
+      white-space: nowrap;
+    }
+
+    tbody td {
+      border-bottom: 1px solid #edf2f7;
+      border-right: 1px solid #edf2f7;
+      background: white;
+      padding: 0;
+      height: 44px;
+      vertical-align: middle;
+      min-width: 0;
+    }
+
+    tbody tr:hover td {
+      background: #fbfdff;
+    }
+
+    tbody tr.selected td {
+      background: #eff6ff;
+    }
+
+    .row-no {
+      text-align: center;
+      font-weight: 700;
+      color: var(--muted);
+      background: #fafcff;
+      position: sticky;
+      left: 0;
+      z-index: 2;
+    }
+
+    thead .sticky-first {
+      position: sticky;
+      left: 0;
+      z-index: 4;
+    }
+
+    td.sticky-first {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background: #fafcff;
+    }
+
+    .cell-input,
+    .cell-select {
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
+      min-height: 44px;
+      border: 0;
+      border-radius: 0;
+      padding: 10px 8px;
+      background: transparent;
+      outline: none;
+      min-width: 0;
+    }
+
+    .cell-input.amount {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+    }
+
+    .cell-input:focus,
+    .cell-select:focus {
+      background: #fffceb;
+      box-shadow: inset 0 0 0 2px #f5d96b;
+    }
+
+    .money.income { color: var(--green); }
+    .money.expense { color: var(--red); }
+    .money.balance { color: #1d4ed8; }
+    .money.labor { color: var(--purple); }
+
+    .table-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px 18px;
+      border-top: 1px solid #edf2f7;
+      flex-wrap: wrap;
+    }
+
+    .table-actions .meta {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .delete-no-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px;
+      border: 1px solid #dbe5f0;
+      border-radius: 12px;
+      background: #f8fbff;
+    }
+
+    .delete-no-box input {
+      width: 92px;
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid #cfd8e3;
+      border-radius: 10px;
+      outline: none;
+      font-size: 14px;
+      font-weight: 700;
+      background: white;
+    }
+
+    .delete-no-box input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .btn-danger {
+      border: 0;
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      color: white;
+      background: var(--red);
+      cursor: pointer;
+    }
+
+    .btn-danger:hover {
+      filter: brightness(0.97);
+    }
+
+    .delete-no-box {
+      flex-wrap: nowrap;
+      max-width: 100%;
+    }
+
+    .delete-no-box input,
+    .delete-no-box button {
+      flex: 0 0 auto;
+    }
+
+    .halfyear-wrap {
+      padding: 18px;
+    }
+
+    .halfyear-card {
+      border: 1px solid #e6edf6;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #fbfdff;
+    }
+
+    .halfyear-title {
+      padding: 14px 16px;
+      font-weight: 800;
+      color: #24415f;
+      border-bottom: 1px solid #e6edf6;
+      background: linear-gradient(180deg, #f8fbff 0%, #eff5ff 100%);
+    }
+
+    .halfyear-table {
+      width: 100%;
+      min-width: 0;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .halfyear-table th,
+    .halfyear-table td {
+      border-bottom: 1px solid #edf2f7;
+      padding: 12px 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .halfyear-table th {
+      background: #f8fbff;
+      color: #51657d;
+      font-weight: 800;
+    }
+
+    .halfyear-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 18px 8px 4px;
+    }
+
+    @media (max-width: 1200px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .app { padding: 14px; }
+      .summary-cards,
+      .grid2,
+      .hero-meta { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 24px; }
+      .toolbar { align-items: stretch; }
+      .toolbar-left,
+      .toolbar-right { width: 100%; }
+      .toolbar-left > *,
+      .toolbar-right > * { flex: 1 1 auto; }
+      .delete-no-box {
+        width: 100%;
+      }
+      .delete-no-box input,
+      .delete-no-box button {
+        flex: 1 1 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <div>
+        <h1>간편장부 프로그램</h1>
+        <p>
+          그래프 없이 깔끔한 엑셀형식으로 수입과 지출을 관리할 수 있는 장부입니다.
+          반기별 전체 합계와 조회 합계를 분리해서 보여주며, 인건비는 수입/지출과 별도로 따로 집계되도록 구성했습니다.
+        </p>
+      </div>
+      <div class="hero-meta">
+        <div class="hero-card">
+          <div class="label">현재 기준년도</div>
+          <div class="value" id="heroYear">-</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <aside class="panel sidebar">
+        <div class="section">
+          <h2>기본 설정</h2>
+          <div class="grid1">
+            <div>
+              <label for="filterYear">년 필터</label>
+              <select id="filterYear"></select>
+            </div>
+            <div>
+              <label for="filterMonth">월 필터</label>
+              <select id="filterMonth">
+                <option value="">전체 월</option>
+              </select>
+            </div>
+            <div>
+              <label for="keyword">검색</label>
+              <input type="text" id="keyword" placeholder="거래처, 내용, 거래종류, 분류 검색" />
+            </div>
+            <div class="grid2">
+              <div>
+                <label for="typeFilter">구분 필터</label>
+                <select id="typeFilter">
+                  <option value="all">전체</option>
+                  <option value="income">수입</option>
+                  <option value="expense">지출</option>
+                </select>
+              </div>
+              <div>
+                <label for="categoryQuick">분류 필터</label>
+                <select id="categoryQuick">
+                  <option value="">전체 분류</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>빠른 입력</h2>
+          <div class="grid2">
+            <div>
+              <label for="quickDate">일자</label>
+              <input type="date" id="quickDate" />
+            </div>
+            <div>
+              <label for="quickType">구분</label>
+              <select id="quickType">
+                <option value="income">수입</option>
+                <option value="expense">지출</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid1" style="margin-top:10px;">
+            <div>
+              <label for="quickCategory">분류</label>
+              <select id="quickCategory"></select>
+            </div>
+            <div>
+              <label for="quickVendor">거래처</label>
+              <input type="text" id="quickVendor" placeholder="예: 거래처명 입력" />
+            </div>
+            <div>
+              <label for="quickDesc">내용</label>
+              <input type="text" id="quickDesc" placeholder="예: 매입, 경비, 인건비" />
+            </div>
+            <div class="grid2">
+              <div>
+                <label for="quickTradeKind">거래종류</label>
+                <select id="quickTradeKind">
+                  <option value="카드">카드</option>
+                  <option value="현금">현금</option>
+                  <option value="세금계산서">세금계산서</option>
+                </select>
+              </div>
+              <div>
+                <label for="quickAmount">금액</label>
+                <input type="number" id="quickAmount" min="0" step="100" placeholder="0" />
+              </div>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:12px;">
+            <button class="btn-primary" id="addQuickRowBtn">빠른 입력 추가</button>
+          </div>
+          <div class="mini-note">빠르게 한 줄을 추가한 뒤 아래 엑셀 표에서 바로 수정할 수 있습니다.</div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <section class="panel">
+          <div class="halfyear-wrap">
+            <div class="halfyear-card">
+              <div class="halfyear-title" id="halfyearTitle">반기별 전체 합계</div>
+              <table class="halfyear-table">
+                <thead>
+                  <tr>
+                    <th>구분</th>
+                    <th>전체 수입 합계</th>
+                    <th>전체 지출 합계</th>
+                    <th>전체 인건비 합계</th>
+                    <th>전체 잔액 합계</th>
+                  </tr>
+                </thead>
+                <tbody id="halfyearBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <span class="badge" id="yearBadge">기준년도: -</span>
+              <span class="badge" id="saveStateBadge">자동 저장됨</span>
+            </div>
+            <div class="toolbar-right">
+              <div class="delete-no-box">
+                <input type="number" id="deleteRowNo" min="1" step="1" placeholder="삭제 No" />
+                <button class="btn-danger" id="deleteRowBtn">번호 삭제</button>
+              </div>
+              <button class="btn-primary" id="addRowBtn">추가</button>
+            </div>
+          </div>
+
+          <div class="sheet-wrap">
+            <div class="sheet-frame">
+              <table>
+                <colgroup>
+                  <col style="width:50px;" />
+                  <col style="width:110px;" />
+                  <col style="width:80px;" />
+                  <col style="width:100px;" />
+                  <col style="width:140px;" />
+                  <col style="width:180px;" />
+                  <col style="width:110px;" />
+                  <col style="width:110px;" />
+                  <col style="width:110px;" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th class="sticky-first">No</th>
+                    <th>일자</th>
+                    <th>구분</th>
+                    <th>분류</th>
+                    <th>거래처</th>
+                    <th>내용</th>
+                    <th>거래종류</th>
+                    <th>수입</th>
+                    <th>지출</th>
+                  </tr>
+                </thead>
+                <tbody id="ledgerBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="table-actions">
+            <div class="meta" id="tableMeta">총 0개 행</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="summary-cards">
+            <div class="summary-card income">
+              <div class="title">조회 수입 합계</div>
+              <div class="num money income" id="sumIncome">0원</div>
+            </div>
+            <div class="summary-card expense">
+              <div class="title">조회 지출 합계</div>
+              <div class="num money expense" id="sumExpense">0원</div>
+            </div>
+            <div class="summary-card balance">
+              <div class="title">조회 잔액</div>
+              <div class="num money balance" id="sumBalance">0원</div>
+            </div>
+            <div class="summary-card labor">
+              <div class="title">조회 인건비 합계</div>
+              <div class="num money labor" id="sumLabor">0원</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="footer-note">
+          브라우저 자동 저장 지원 · 엑셀형 편집
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+const STORAGE_KEY = 'simple_ledger_excel_style_v4';
+
+// ✅ GAS 웹앱 URL
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw9raEpZcSw-wEyO72Nz3yjWk6twx1peXCLRcILVIzE0GKVK8eiPNW4vzZbuiJKBtIe/exec';
+
+// ✅ 장부 식별자(여러 장부로 확장할 때 대비)
+const LEDGER_ID = 'main';
+
+// ✅ 원격 저장 디바운스용
+let remoteSaveTimer = null;
+let isRemoteLoading = false;
+
+const categories = {
+  income: ['매출', '기타'],
+  expense: ['매입', '경비', '인건비', '기타']
+};
+
+    const tradeKinds = ['카드', '현금', '세금계산서'];
+
+    const els = {
+      ledgerBody: document.getElementById('ledgerBody'),
+      filterYear: document.getElementById('filterYear'),
+      filterMonth: document.getElementById('filterMonth'),
+      keyword: document.getElementById('keyword'),
+      typeFilter: document.getElementById('typeFilter'),
+      categoryQuick: document.getElementById('categoryQuick'),
+      quickDate: document.getElementById('quickDate'),
+      quickType: document.getElementById('quickType'),
+      quickCategory: document.getElementById('quickCategory'),
+      quickVendor: document.getElementById('quickVendor'),
+      quickDesc: document.getElementById('quickDesc'),
+      quickTradeKind: document.getElementById('quickTradeKind'),
+      quickAmount: document.getElementById('quickAmount'),
+      addQuickRowBtn: document.getElementById('addQuickRowBtn'),
+      addRowBtn: document.getElementById('addRowBtn'),
+      deleteRowNo: document.getElementById('deleteRowNo'),
+      deleteRowBtn: document.getElementById('deleteRowBtn'),
+      sumIncome: document.getElementById('sumIncome'),
+      sumExpense: document.getElementById('sumExpense'),
+      sumBalance: document.getElementById('sumBalance'),
+      sumLabor: document.getElementById('sumLabor'),
+      heroYear: document.getElementById('heroYear'),
+      yearBadge: document.getElementById('yearBadge'),
+      tableMeta: document.getElementById('tableMeta'),
+      saveStateBadge: document.getElementById('saveStateBadge'),
+      halfyearTitle: document.getElementById('halfyearTitle'),
+      halfyearBody: document.getElementById('halfyearBody')
+    };
+
+    let rows = [];
+    let selectedId = null;
+
+    function currentYear() {
+      return new Date().getFullYear();
+    }
+
+    function uid() {
+      return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+    }
+
+    function todayStr() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function dateParts(dateText) {
+      if (!dateText || !/^\d{4}-\d{2}-\d{2}$/.test(dateText)) return null;
+      return {
+        year: Number(dateText.slice(0, 4)),
+        month: Number(dateText.slice(5, 7)),
+        day: Number(dateText.slice(8, 10))
+      };
+    }
+
+    function num(v) {
+      const n = Number(String(v ?? '').replace(/,/g, '').trim());
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function formatMoney(v) {
+      return `${Math.round(num(v)).toLocaleString('ko-KR')}원`;
+    }
+
+    function escapeHtml(str = '') {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function createRow(data = {}) {
+      const type = data.type || 'expense';
+      const amount = num(data.amount);
+      const category = (categories[type] || []).includes(data.category)
+        ? data.category
+        : (categories[type]?.[0] || '');
+      const tradeKind = tradeKinds.includes(data.tradeKind) ? data.tradeKind : '카드';
+
+      return {
+        id: data.id || uid(),
+        date: data.date || todayStr(),
+        type,
+        category,
+        vendor: data.vendor || '',
+        desc: data.desc || '',
+        tradeKind,
+        income: type === 'income' ? amount : num(data.income),
+        expense: type === 'expense' ? amount : num(data.expense)
+      };
+    }
+
+    function migrateLegacyRows(rawRows) {
+      return rawRows.map((row) => {
+        const type = row.type === 'income' ? 'income' : 'expense';
+        const normalized = createRow({
+          ...row,
+          type,
+          vendor: row.vendor || row.client || row.partner || '',
+          category: row.category,
+          tradeKind: row.tradeKind,
+          income: num(row.income),
+          expense: num(row.expense),
+          amount: type === 'income' ? num(row.income) : num(row.expense)
+        });
+        syncTypeAmounts(normalized);
+        return normalized;
+      });
+    }
+
+    function setSaveState(text) {
+      els.saveStateBadge.textContent = text;
+      clearTimeout(setSaveState.timer);
+      setSaveState.timer = setTimeout(() => {
+        els.saveStateBadge.textContent = '자동 저장됨';
+      }, 1200);
+    }
+
+async function saveRemote(force = false) {
+  if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes('여기에_배포된_GAS_웹앱_URL_넣기')) {
+    return;
+  }
+
+  if (!force) {
+    clearTimeout(remoteSaveTimer);
+    remoteSaveTimer = setTimeout(() => {
+      saveRemote(true);
+    }, 800);
+    return;
+  }
+
+  try {
+    setSaveState('구글 시트 저장 중...');
+
+    const payload = {
+      action: 'saveLedger',
+      ledgerId: LEDGER_ID,
+      rows
+    };
+
+    const res = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data || data.ok !== true) {
+      throw new Error(data?.message || '원격 저장 실패');
+    }
+
+    setSaveState('구글 시트 저장 완료');
+  } catch (err) {
+    console.error('[saveRemote] 실패:', err);
+    setSaveState('로컬 저장만 완료');
+  }
+}
+
+async function loadRemote() {
+  if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes('여기에_배포된_GAS_웹앱_URL_넣기')) {
+    return null;
+  }
+
+  try {
+    isRemoteLoading = true;
+    setSaveState('구글 시트 불러오는 중...');
+
+    const url = `${GAS_WEB_APP_URL}?action=getLedger&ledgerId=${encodeURIComponent(LEDGER_ID)}`;
+    const res = await fetch(url, { method: 'GET' });
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data || data.ok !== true) {
+      throw new Error(data?.message || '원격 불러오기 실패');
+    }
+
+    if (!Array.isArray(data.rows)) {
+      return null;
+    }
+
+    return data.rows;
+  } catch (err) {
+    console.error('[loadRemote] 실패:', err);
+    return null;
+  } finally {
+    isRemoteLoading = false;
+  }
+}
+
+function normalizeLoadedRows(source) {
+  if (!Array.isArray(source) || source.length === 0) return null;
+  return migrateLegacyRows(source);
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+  setSaveState('저장 완료');
+
+  if (!isRemoteLoading) {
+    saveRemote(false);
+  }
+}
+
+    function load() {
+      try {
+        const rawCurrent = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const rawLegacy = JSON.parse(localStorage.getItem('simple_ledger_excel_style_v3') || '[]');
+        const source = Array.isArray(rawCurrent) && rawCurrent.length ? rawCurrent : rawLegacy;
+
+        if (!Array.isArray(source) || source.length === 0) {
+          const y = currentYear();
+          rows = [
+            createRow({ date: `${y}-01-10`, type: 'income', category: '매출', vendor: '기본거래처', desc: '초기 수입', tradeKind: '카드', amount: 350000 }),
+            createRow({ date: `${y}-03-12`, type: 'expense', category: '매입', vendor: '기본거래처', desc: '초기 매입', tradeKind: '세금계산서', amount: 120000 }),
+            createRow({ date: `${y}-08-25`, type: 'expense', category: '인건비', vendor: '직원', desc: '급여 지급', tradeKind: '현금', amount: 100000 })
+          ];
+        } else {
+          rows = migrateLegacyRows(source);
+        }
+      } catch {
+        rows = [createRow()];
+      }
+
+      if (!rows.length) rows = [createRow()];
+      selectedId = rows[0]?.id || null;
+    }
+
+async function hydrateFromRemoteIfAvailable() {
+  const remoteRows = await loadRemote();
+  const normalized = normalizeLoadedRows(remoteRows);
+
+  if (!normalized || !normalized.length) {
+    setSaveState('자동 저장됨');
+    return;
+  }
+
+  rows = normalized;
+  if (!rows.length) rows = [createRow()];
+  selectedId = rows[0]?.id || null;
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+  refreshYearOptionsPreserve();
+  render();
+  setSaveState('구글 시트 불러오기 완료');
+}
+
+    function fillCategoryFilter() {
+      const all = [...new Set([...categories.income, ...categories.expense])];
+      els.categoryQuick.innerHTML = ['<option value="">전체 분류</option>']
+        .concat(all.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`))
+        .join('');
+    }
+
+    function fillQuickCategories() {
+      const type = els.quickType.value;
+      const opts = categories[type] || [];
+      els.quickCategory.innerHTML = opts.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+    }
+
+    function fillYearOptions() {
+      const years = [...new Set(rows.map(r => dateParts(r.date)?.year).filter(Boolean))].sort((a, b) => a - b);
+      const y = currentYear();
+      if (!years.includes(y)) years.push(y);
+      years.sort((a, b) => a - b);
+      els.filterYear.innerHTML = years.map(year => `<option value="${year}">${year}년</option>`).join('');
+      els.filterYear.value = String(y);
+    }
+
+    function fillMonthOptions() {
+      const options = ['<option value="">전체 월</option>'];
+      for (let m = 1; m <= 12; m++) {
+        options.push(`<option value="${String(m)}">${m}월</option>`);
+      }
+      els.filterMonth.innerHTML = options.join('');
+    }
+
+    function getSelectedYear() {
+      return Number(els.filterYear.value || currentYear());
+    }
+
+    function getFilteredRows() {
+      const year = getSelectedYear();
+      const month = Number(els.filterMonth.value || 0);
+      const keyword = els.keyword.value.trim().toLowerCase();
+      const type = els.typeFilter.value;
+      const category = els.categoryQuick.value;
+
+      return rows.filter(row => {
+        const parts = dateParts(row.date);
+        if (!parts) return false;
+        if (parts.year !== year) return false;
+        if (month && parts.month !== month) return false;
+        if (type !== 'all' && row.type !== type) return false;
+        if (category && row.category !== category) return false;
+        if (keyword) {
+          const target = [row.date, row.category, row.vendor, row.desc, row.tradeKind].join(' ').toLowerCase();
+          if (!target.includes(keyword)) return false;
+        }
+        return true;
+      });
+    }
+
+    function syncTypeAmounts(row) {
+      if (row.type === 'income') {
+        row.income = num(row.income);
+        row.expense = 0;
+      } else {
+        row.expense = num(row.expense);
+        row.income = 0;
+      }
+    }
+
+    function render() {
+      const filtered = getFilteredRows();
+
+      els.ledgerBody.innerHTML = filtered.map((row, idx) => {
+        const isSelected = row.id === selectedId;
+        const categoryOptions = (categories[row.type] || []).map(cat => `
+          <option value="${escapeHtml(cat)}" ${row.category === cat ? 'selected' : ''}>${escapeHtml(cat)}</option>
+        `).join('');
+        const tradeKindOptions = tradeKinds.map(kind => `
+          <option value="${escapeHtml(kind)}" ${row.tradeKind === kind ? 'selected' : ''}>${escapeHtml(kind)}</option>
+        `).join('');
+
+        return `
+          <tr class="${isSelected ? 'selected' : ''}" data-id="${row.id}">
+            <td class="row-no sticky-first">${idx + 1}</td>
+            <td><input class="cell-input" data-field="date" data-id="${row.id}" type="date" value="${escapeHtml(row.date)}" /></td>
+            <td>
+              <select class="cell-select" data-field="type" data-id="${row.id}">
+                <option value="income" ${row.type === 'income' ? 'selected' : ''}>수입</option>
+                <option value="expense" ${row.type === 'expense' ? 'selected' : ''}>지출</option>
+              </select>
+            </td>
+            <td>
+              <select class="cell-select" data-field="category" data-id="${row.id}">
+                ${categoryOptions}
+              </select>
+            </td>
+            <td><input class="cell-input" data-field="vendor" data-id="${row.id}" type="text" value="${escapeHtml(row.vendor)}" placeholder="거래처 입력" /></td>
+            <td><input class="cell-input" data-field="desc" data-id="${row.id}" type="text" value="${escapeHtml(row.desc)}" placeholder="내용 입력" /></td>
+            <td>
+              <select class="cell-select" data-field="tradeKind" data-id="${row.id}">
+                ${tradeKindOptions}
+              </select>
+            </td>
+            <td><input class="cell-input amount" data-field="income" data-id="${row.id}" type="number" min="0" step="100" value="${row.income || ''}" placeholder="0" ${row.type !== 'income' ? 'disabled' : ''} /></td>
+            <td><input class="cell-input amount" data-field="expense" data-id="${row.id}" type="number" min="0" step="100" value="${row.expense || ''}" placeholder="0" ${row.type !== 'expense' ? 'disabled' : ''} /></td>
+          </tr>
+        `;
+      }).join('');
+
+      updateSummaries(filtered);
+      updateHeaderInfo();
+      updateHalfyearSummary();
+      bindTableEvents();
+    }
+
+    function updateHeaderInfo() {
+      const year = getSelectedYear();
+      els.heroYear.textContent = `${year}년`;
+      els.yearBadge.textContent = `기준년도: ${year}년`;
+      els.tableMeta.textContent = `총 ${rows.length.toLocaleString('ko-KR')}개 행 · 현재 선택 ${selectedId ? '있음' : '없음'}`;
+      els.halfyearTitle.textContent = `${year}년 반기별 전체 합계`;
+    }
+
+    function updateSummaries(filtered) {
+      const income = filtered.reduce((s, r) => s + num(r.income), 0);
+      const expense = filtered.reduce((s, r) => s + num(r.expense), 0);
+      const labor = filtered.reduce((s, r) => s + (r.category === '인건비' ? num(r.expense) : 0), 0);
+      const balance = income - expense;
+
+      els.sumIncome.textContent = formatMoney(income);
+      els.sumExpense.textContent = formatMoney(expense);
+      els.sumBalance.textContent = formatMoney(balance);
+      els.sumLabor.textContent = formatMoney(labor);
+    }
+
+    function computeTotalsForMonths(year, monthStart, monthEnd) {
+      const targetRows = rows.filter(row => {
+        const parts = dateParts(row.date);
+        return parts && parts.year === year && parts.month >= monthStart && parts.month <= monthEnd;
+      });
+
+      const income = targetRows.reduce((s, r) => s + num(r.income), 0);
+      const expense = targetRows.reduce((s, r) => s + num(r.expense), 0);
+      const labor = targetRows.reduce((s, r) => s + (r.category === '인건비' ? num(r.expense) : 0), 0);
+      const balance = income - expense;
+
+      return { income, expense, labor, balance };
+    }
+
+    function updateHalfyearSummary() {
+      const year = getSelectedYear();
+      const first = computeTotalsForMonths(year, 1, 6);
+      const second = computeTotalsForMonths(year, 7, 12);
+
+      els.halfyearBody.innerHTML = `
+        <tr>
+          <td><strong>상반기 (1월~6월)</strong></td>
+          <td class="money income">${formatMoney(first.income)}</td>
+          <td class="money expense">${formatMoney(first.expense)}</td>
+          <td class="money labor">${formatMoney(first.labor)}</td>
+          <td class="money balance">${formatMoney(first.balance)}</td>
+        </tr>
+        <tr>
+          <td><strong>하반기 (7월~12월)</strong></td>
+          <td class="money income">${formatMoney(second.income)}</td>
+          <td class="money expense">${formatMoney(second.expense)}</td>
+          <td class="money labor">${formatMoney(second.labor)}</td>
+          <td class="money balance">${formatMoney(second.balance)}</td>
+        </tr>
+      `;
+    }
+
+    function bindTableEvents() {
+      const inputs = els.ledgerBody.querySelectorAll('[data-id][data-field]');
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          selectedId = input.dataset.id;
+          highlightSelected();
+        });
+
+        input.addEventListener('input', () => {
+          const row = rows.find(r => r.id === input.dataset.id);
+          if (!row) return;
+          const field = input.dataset.field;
+
+          if (field === 'income' || field === 'expense') {
+            row[field] = num(input.value);
+          } else {
+            row[field] = input.value;
+          }
+
+          if (field === 'type') {
+            if (!row.category || !(categories[row.type] || []).includes(row.category)) {
+              row.category = categories[row.type]?.[0] || '';
+            }
+            syncTypeAmounts(row);
+            render();
+            save();
+            return;
+          }
+
+          if (field === 'income' && row.type === 'income') row.expense = 0;
+          if (field === 'expense' && row.type === 'expense') row.income = 0;
+
+          save();
+          updateSummaries(getFilteredRows());
+          updateHeaderInfo();
+          updateHalfyearSummary();
+        });
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            moveFocus(input, e.shiftKey ? -1 : 1);
+          }
+        });
+      });
+
+      els.ledgerBody.querySelectorAll('tr[data-id]').forEach(tr => {
+        tr.addEventListener('click', () => {
+          selectedId = tr.dataset.id;
+          highlightSelected();
+        });
+      });
+    }
+
+    function moveFocus(current, direction) {
+      const list = Array.from(els.ledgerBody.querySelectorAll('[data-id][data-field]:not([disabled])'));
+      const idx = list.indexOf(current);
+      if (idx < 0) return;
+      const next = list[idx + direction];
+      if (next) next.focus();
+    }
+
+    function highlightSelected() {
+      els.ledgerBody.querySelectorAll('tr[data-id]').forEach(tr => {
+        tr.classList.toggle('selected', tr.dataset.id === selectedId);
+      });
+      updateHeaderInfo();
+    }
+
+    function addQuickRow() {
+      const type = els.quickType.value;
+      const amount = num(els.quickAmount.value);
+      if (!amount) {
+        alert('금액을 입력해주세요.');
+        return;
+      }
+
+      const row = createRow({
+        date: els.quickDate.value || todayStr(),
+        type,
+        category: els.quickCategory.value || categories[type]?.[0] || '',
+        vendor: els.quickVendor.value.trim(),
+        desc: els.quickDesc.value.trim(),
+        tradeKind: els.quickTradeKind.value,
+        amount
+      });
+
+      rows.push(row);
+      selectedId = row.id;
+      refreshYearOptionsPreserve();
+      render();
+      save();
+
+      els.quickVendor.value = '';
+      els.quickDesc.value = '';
+      els.quickAmount.value = '';
+    }
+
+    function addEmptyRow() {
+      const year = getSelectedYear();
+      const month = Number(els.filterMonth.value || 1);
+      const date = `${year}-${String(month).padStart(2, '0')}-01`;
+      const row = createRow({ date, type: 'expense', category: '매입', tradeKind: '카드', vendor: '' });
+      rows.push(row);
+      selectedId = row.id;
+      refreshYearOptionsPreserve();
+      render();
+      save();
+    }
+
+    function deleteRowByVisibleNo() {
+      const visibleNo = Number(els.deleteRowNo.value);
+      if (!Number.isInteger(visibleNo) || visibleNo < 1) {
+        alert('삭제할 No를 올바르게 입력해주세요.');
+        els.deleteRowNo.focus();
+        return;
+      }
+
+      const filtered = getFilteredRows();
+      const target = filtered[visibleNo - 1];
+      if (!target) {
+        alert('현재 조회 결과에 해당 번호가 없습니다.');
+        els.deleteRowNo.focus();
+        return;
+      }
+
+      const ok = confirm(`No ${visibleNo} 행을 삭제할까요?\n${target.date || '-'} / ${target.vendor || '-'} / ${target.desc || '-'}`);
+      if (!ok) return;
+
+      rows = rows.filter(row => row.id !== target.id);
+      if (selectedId === target.id) {
+        selectedId = filtered[visibleNo]?.id || filtered[visibleNo - 2]?.id || '';
+      }
+
+      refreshYearOptionsPreserve();
+      render();
+      save();
+      els.deleteRowNo.value = '';
+    }
+
+    function refreshYearOptionsPreserve() {
+      const prev = els.filterYear.value || String(currentYear());
+      fillYearOptions();
+      if ([...els.filterYear.options].some(opt => opt.value === prev)) {
+        els.filterYear.value = prev;
+      }
+    }
+
+    function bindEvents() {
+      els.quickType.addEventListener('change', fillQuickCategories);
+      els.addQuickRowBtn.addEventListener('click', addQuickRow);
+      els.addRowBtn.addEventListener('click', addEmptyRow);
+      els.deleteRowBtn.addEventListener('click', deleteRowByVisibleNo);
+      els.deleteRowNo.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          deleteRowByVisibleNo();
+        }
+      });
+
+      [els.filterYear, els.filterMonth, els.keyword, els.typeFilter, els.categoryQuick].forEach(el => {
+        el.addEventListener('input', render);
+        el.addEventListener('change', render);
+      });
+
+      els.quickDate.value = todayStr();
+    }
+
+async function init() {
+  load(); // 먼저 로컬 데이터 즉시 표시
+  fillCategoryFilter();
+  fillQuickCategories();
+  fillMonthOptions();
+  fillYearOptions();
+  bindEvents();
+  render();
+
+  // ✅ 먼저 원격 데이터가 있으면 가져오기
+  await hydrateFromRemoteIfAvailable();
+
+  // ✅ 원격 불러오기 후 현재 상태를 로컬에만 반영
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+  setSaveState('자동 저장됨');
+}
+
+init();
+  </script>
+</body>
+</html>
