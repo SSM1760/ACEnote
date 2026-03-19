@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -664,13 +665,13 @@
               <div class="halfyear-title" id="halfyearTitle">반기별 전체 합계</div>
               <table class="halfyear-table">
                 <thead>
-                  <tr>
-                    <th>구분</th>
-                    <th>전체 수입 합계</th>
-                    <th>전체 지출 합계</th>
-                    <th>전체 인건비 합계</th>
-                    <th>전체 잔액 합계</th>
-                  </tr>
+<tr>
+  <th>구분</th>
+  <th>전체 수입 합계</th>
+  <th>전체 지출 합계</th>
+  <th>전체 잔액 합계</th>
+  <th>전체 인건비 합계</th>
+</tr>
                 </thead>
                 <tbody id="halfyearBody"></tbody>
               </table>
@@ -845,6 +846,11 @@ const categories = {
       return `${Math.round(num(v)).toLocaleString('ko-KR')}원`;
     }
 
+function formatAmountInput(v) {
+  const n = num(v);
+  return n ? n.toLocaleString('ko-KR') : '';
+}
+
     function escapeHtml(str = '') {
       return String(str)
         .replace(/&/g, '&amp;')
@@ -993,15 +999,10 @@ function save() {
         const source = Array.isArray(rawCurrent) && rawCurrent.length ? rawCurrent : rawLegacy;
 
         if (!Array.isArray(source) || source.length === 0) {
-          const y = currentYear();
-          rows = [
-            createRow({ date: `${y}-01-10`, type: 'income', category: '매출', vendor: '기본거래처', desc: '초기 수입', tradeKind: '카드', amount: 350000 }),
-            createRow({ date: `${y}-03-12`, type: 'expense', category: '매입', vendor: '기본거래처', desc: '초기 매입', tradeKind: '세금계산서', amount: 120000 }),
-            createRow({ date: `${y}-08-25`, type: 'expense', category: '인건비', vendor: '직원', desc: '급여 지급', tradeKind: '현금', amount: 100000 })
-          ];
-        } else {
-          rows = migrateLegacyRows(source);
-        }
+  rows = [createRow()];
+} else {
+  rows = migrateLegacyRows(source);
+}
       } catch {
         rows = [createRow()];
       }
@@ -1129,8 +1130,8 @@ async function hydrateFromRemoteIfAvailable() {
                 ${tradeKindOptions}
               </select>
             </td>
-            <td><input class="cell-input amount" data-field="income" data-id="${row.id}" type="number" min="0" step="100" value="${row.income || ''}" placeholder="0" ${row.type !== 'income' ? 'disabled' : ''} /></td>
-            <td><input class="cell-input amount" data-field="expense" data-id="${row.id}" type="number" min="0" step="100" value="${row.expense || ''}" placeholder="0" ${row.type !== 'expense' ? 'disabled' : ''} /></td>
+<td><input class="cell-input amount" data-field="income" data-id="${row.id}" type="text" inputmode="numeric" value="${formatAmountInput(row.income)}" placeholder="0" ${row.type !== 'income' ? 'disabled' : ''} /></td>
+<td><input class="cell-input amount" data-field="expense" data-id="${row.id}" type="text" inputmode="numeric" value="${formatAmountInput(row.expense)}" placeholder="0" ${row.type !== 'expense' ? 'disabled' : ''} /></td>
           </tr>
         `;
       }).join('');
@@ -1199,58 +1200,71 @@ async function hydrateFromRemoteIfAvailable() {
     }
 
     function bindTableEvents() {
-      const inputs = els.ledgerBody.querySelectorAll('[data-id][data-field]');
-      inputs.forEach(input => {
-        input.addEventListener('focus', () => {
-          selectedId = input.dataset.id;
-          highlightSelected();
-        });
+  const inputs = els.ledgerBody.querySelectorAll('[data-id][data-field]');
+  inputs.forEach(input => {
+    input.addEventListener('focus', () => {
+      selectedId = input.dataset.id;
+      highlightSelected();
 
-        input.addEventListener('input', () => {
-          const row = rows.find(r => r.id === input.dataset.id);
-          if (!row) return;
-          const field = input.dataset.field;
+      const field = input.dataset.field;
+      if (field === 'income' || field === 'expense') {
+        input.value = num(input.value) ? String(num(input.value)) : '';
+      }
+    });
 
-          if (field === 'income' || field === 'expense') {
-            row[field] = num(input.value);
-          } else {
-            row[field] = input.value;
-          }
+    input.addEventListener('input', () => {
+      const row = rows.find(r => r.id === input.dataset.id);
+      if (!row) return;
+      const field = input.dataset.field;
 
-          if (field === 'type') {
-            if (!row.category || !(categories[row.type] || []).includes(row.category)) {
-              row.category = categories[row.type]?.[0] || '';
-            }
-            syncTypeAmounts(row);
-            render();
-            save();
-            return;
-          }
+      if (field === 'income' || field === 'expense') {
+        input.value = input.value.replace(/[^\d]/g, '');
+        row[field] = num(input.value);
+      } else {
+        row[field] = input.value;
+      }
 
-          if (field === 'income' && row.type === 'income') row.expense = 0;
-          if (field === 'expense' && row.type === 'expense') row.income = 0;
+      if (field === 'type') {
+        if (!row.category || !(categories[row.type] || []).includes(row.category)) {
+          row.category = categories[row.type]?.[0] || '';
+        }
+        syncTypeAmounts(row);
+        render();
+        save();
+        return;
+      }
 
-          save();
-          updateSummaries(getFilteredRows());
-          updateHeaderInfo();
-          updateHalfyearSummary();
-        });
+      if (field === 'income' && row.type === 'income') row.expense = 0;
+      if (field === 'expense' && row.type === 'expense') row.income = 0;
 
-        input.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            moveFocus(input, e.shiftKey ? -1 : 1);
-          }
-        });
-      });
+      save();
+      updateSummaries(getFilteredRows());
+      updateHeaderInfo();
+      updateHalfyearSummary();
+    });
 
-      els.ledgerBody.querySelectorAll('tr[data-id]').forEach(tr => {
-        tr.addEventListener('click', () => {
-          selectedId = tr.dataset.id;
-          highlightSelected();
-        });
-      });
-    }
+    input.addEventListener('blur', () => {
+      const field = input.dataset.field;
+      if (field === 'income' || field === 'expense') {
+        input.value = formatAmountInput(input.value);
+      }
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        moveFocus(input, e.shiftKey ? -1 : 1);
+      }
+    });
+  });
+
+  els.ledgerBody.querySelectorAll('tr[data-id]').forEach(tr => {
+    tr.addEventListener('click', () => {
+      selectedId = tr.dataset.id;
+      highlightSelected();
+    });
+  });
+}
 
     function moveFocus(current, direction) {
       const list = Array.from(els.ledgerBody.querySelectorAll('[data-id][data-field]:not([disabled])'));
