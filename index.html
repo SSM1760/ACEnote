@@ -593,10 +593,11 @@
               <div>
                 <label for="typeFilter">구분 필터</label>
                 <select id="typeFilter">
-                  <option value="all">전체</option>
-                  <option value="income">수입</option>
-                  <option value="expense">지출</option>
-                </select>
+  <option value="all">전체</option>
+  <option value="income">수입</option>
+  <option value="expense">지출</option>
+  <option value="labor">인건비</option>
+</select>
               </div>
               <div>
                 <label for="categoryQuick">분류 필터</label>
@@ -618,9 +619,10 @@
             <div>
               <label for="quickType">구분</label>
               <select id="quickType">
-                <option value="income">수입</option>
-                <option value="expense">지출</option>
-              </select>
+  <option value="income">수입</option>
+  <option value="expense">지출</option>
+  <option value="labor">인건비</option>
+</select>
             </div>
           </div>
           <div class="grid1" style="margin-top:10px;">
@@ -774,7 +776,8 @@ let isRemoteLoading = false;
 
 const categories = {
   income: ['매출', '기타'],
-  expense: ['매입', '경비', '인건비', '기타']
+  expense: ['매입', '경비', '기타'],
+  labor: []
 };
 
     const tradeKinds = ['카드', '현금', '세금계산서'];
@@ -860,44 +863,54 @@ function formatAmountInput(v) {
         .replace(/'/g, '&#39;');
     }
 
-    function createRow(data = {}) {
-      const type = data.type || 'expense';
-      const amount = num(data.amount);
-      const category = (categories[type] || []).includes(data.category)
-        ? data.category
-        : (categories[type]?.[0] || '');
-      const tradeKind = tradeKinds.includes(data.tradeKind) ? data.tradeKind : '카드';
+function createRow(data = {}) {
+  const type = ['income', 'expense', 'labor'].includes(data.type) ? data.type : 'expense';
+  const amount = num(data.amount);
+  const category = type === 'labor'
+    ? ''
+    : ((categories[type] || []).includes(data.category) ? data.category : (categories[type]?.[0] || ''));
+  const tradeKind = tradeKinds.includes(data.tradeKind) ? data.tradeKind : '카드';
 
-      return {
-        id: data.id || uid(),
-        date: data.date || todayStr(),
-        type,
-        category,
-        vendor: data.vendor || '',
-        desc: data.desc || '',
-        tradeKind,
-        income: type === 'income' ? amount : num(data.income),
-        expense: type === 'expense' ? amount : num(data.expense)
-      };
+  return {
+    id: data.id || uid(),
+    date: data.date || todayStr(),
+    type,
+    category,
+    vendor: data.vendor || '',
+    desc: data.desc || '',
+    tradeKind,
+    income: type === 'income' ? amount : num(data.income),
+    expense: (type === 'expense' || type === 'labor') ? amount : num(data.expense)
+  };
+}
+
+function migrateLegacyRows(rawRows) {
+  return rawRows.map((row) => {
+    let type = 'expense';
+
+    if (row.type === 'income') {
+      type = 'income';
+    } else if (row.type === 'labor' || row.category === '인건비') {
+      type = 'labor';
+    } else {
+      type = 'expense';
     }
 
-    function migrateLegacyRows(rawRows) {
-      return rawRows.map((row) => {
-        const type = row.type === 'income' ? 'income' : 'expense';
-        const normalized = createRow({
-          ...row,
-          type,
-          vendor: row.vendor || row.client || row.partner || '',
-          category: row.category,
-          tradeKind: row.tradeKind,
-          income: num(row.income),
-          expense: num(row.expense),
-          amount: type === 'income' ? num(row.income) : num(row.expense)
-        });
-        syncTypeAmounts(normalized);
-        return normalized;
-      });
-    }
+const normalized = createRow({
+  ...row,
+  type,
+  vendor: row.vendor || row.client || row.partner || '',
+  category: type === 'labor' ? '' : row.category,
+  tradeKind: row.tradeKind,
+  income: num(row.income),
+  expense: num(row.expense),
+  amount: type === 'income' ? num(row.income) : num(row.expense)
+});
+
+    syncTypeAmounts(normalized);
+    return normalized;
+  });
+}
 
     function setSaveState(text) {
       els.saveStateBadge.textContent = text;
@@ -1084,15 +1097,19 @@ async function hydrateFromRemoteIfAvailable() {
       });
     }
 
-    function syncTypeAmounts(row) {
-      if (row.type === 'income') {
-        row.income = num(row.income);
-        row.expense = 0;
-      } else {
-        row.expense = num(row.expense);
-        row.income = 0;
-      }
-    }
+function syncTypeAmounts(row) {
+  if (row.type === 'income') {
+    row.income = num(row.income);
+    row.expense = 0;
+  } else if (row.type === 'expense') {
+    row.expense = num(row.expense);
+    row.income = 0;
+  } else if (row.type === 'labor') {
+    row.expense = num(row.expense);
+    row.income = 0;
+    row.category = '';
+  }
+}
 
     function render() {
       const filtered = getFilteredRows();
@@ -1111,10 +1128,11 @@ async function hydrateFromRemoteIfAvailable() {
             <td class="row-no sticky-first">${idx + 1}</td>
             <td><input class="cell-input" data-field="date" data-id="${row.id}" type="date" value="${escapeHtml(row.date)}" /></td>
             <td>
-              <select class="cell-select" data-field="type" data-id="${row.id}">
-                <option value="income" ${row.type === 'income' ? 'selected' : ''}>수입</option>
-                <option value="expense" ${row.type === 'expense' ? 'selected' : ''}>지출</option>
-              </select>
+<select class="cell-select" data-field="type" data-id="${row.id}">
+  <option value="income" ${row.type === 'income' ? 'selected' : ''}>수입</option>
+  <option value="expense" ${row.type === 'expense' ? 'selected' : ''}>지출</option>
+  <option value="labor" ${row.type === 'labor' ? 'selected' : ''}>인건비</option>
+</select>
             </td>
             <td>
               <select class="cell-select" data-field="category" data-id="${row.id}">
@@ -1129,7 +1147,7 @@ async function hydrateFromRemoteIfAvailable() {
               </select>
             </td>
 <td><input class="cell-input amount" data-field="income" data-id="${row.id}" type="text" inputmode="numeric" value="${formatAmountInput(row.income)}" placeholder="0" ${row.type !== 'income' ? 'disabled' : ''} /></td>
-<td><input class="cell-input amount" data-field="expense" data-id="${row.id}" type="text" inputmode="numeric" value="${formatAmountInput(row.expense)}" placeholder="0" ${row.type !== 'expense' ? 'disabled' : ''} /></td>
+<td><input class="cell-input amount" data-field="expense" data-id="${row.id}" type="text" inputmode="numeric" value="${formatAmountInput(row.expense)}" placeholder="0" ${(row.type !== 'expense' && row.type !== 'labor') ? 'disabled' : ''} /></td>
           </tr>
         `;
       }).join('');
@@ -1148,31 +1166,49 @@ async function hydrateFromRemoteIfAvailable() {
       els.halfyearTitle.textContent = `${year}년 반기별 전체 합계`;
     }
 
-    function updateSummaries(filtered) {
-      const income = filtered.reduce((s, r) => s + num(r.income), 0);
-      const expense = filtered.reduce((s, r) => s + num(r.expense), 0);
-      const labor = filtered.reduce((s, r) => s + (r.category === '인건비' ? num(r.expense) : 0), 0);
-      const balance = income - expense;
+function updateSummaries(filtered) {
+  const income = filtered
+    .filter(r => r.type === 'income')
+    .reduce((s, r) => s + num(r.income), 0);
 
-      els.sumIncome.textContent = formatMoney(income);
-      els.sumExpense.textContent = formatMoney(expense);
-      els.sumBalance.textContent = formatMoney(balance);
-      els.sumLabor.textContent = formatMoney(labor);
-    }
+  const expense = filtered
+    .filter(r => r.type === 'expense')
+    .reduce((s, r) => s + num(r.expense), 0);
 
-    function computeTotalsForMonths(year, monthStart, monthEnd) {
-      const targetRows = rows.filter(row => {
-        const parts = dateParts(row.date);
-        return parts && parts.year === year && parts.month >= monthStart && parts.month <= monthEnd;
-      });
+  const labor = filtered
+    .filter(r => r.type === 'labor')
+    .reduce((s, r) => s + num(r.expense), 0);
 
-      const income = targetRows.reduce((s, r) => s + num(r.income), 0);
-      const expense = targetRows.reduce((s, r) => s + num(r.expense), 0);
-      const labor = targetRows.reduce((s, r) => s + (r.category === '인건비' ? num(r.expense) : 0), 0);
-      const balance = income - expense;
+  const balance = income - expense;
 
-      return { income, expense, labor, balance };
-    }
+  els.sumIncome.textContent = formatMoney(income);
+  els.sumExpense.textContent = formatMoney(expense);
+  els.sumBalance.textContent = formatMoney(balance);
+  els.sumLabor.textContent = formatMoney(labor);
+}
+
+function computeTotalsForMonths(year, monthStart, monthEnd) {
+  const targetRows = rows.filter(row => {
+    const parts = dateParts(row.date);
+    return parts && parts.year === year && parts.month >= monthStart && parts.month <= monthEnd;
+  });
+
+  const income = targetRows
+    .filter(r => r.type === 'income')
+    .reduce((s, r) => s + num(r.income), 0);
+
+  const expense = targetRows
+    .filter(r => r.type === 'expense')
+    .reduce((s, r) => s + num(r.expense), 0);
+
+  const labor = targetRows
+    .filter(r => r.type === 'labor')
+    .reduce((s, r) => s + num(r.expense), 0);
+
+  const balance = income - expense;
+
+  return { income, expense, labor, balance };
+}
 
     function updateHalfyearSummary() {
       const year = getSelectedYear();
@@ -1232,8 +1268,8 @@ async function hydrateFromRemoteIfAvailable() {
         return;
       }
 
-      if (field === 'income' && row.type === 'income') row.expense = 0;
-      if (field === 'expense' && row.type === 'expense') row.income = 0;
+if (field === 'income' && row.type === 'income') row.expense = 0;
+if (field === 'expense' && (row.type === 'expense' || row.type === 'labor')) row.income = 0;
 
       save();
       updateSummaries(getFilteredRows());
